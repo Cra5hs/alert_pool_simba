@@ -1,7 +1,7 @@
 {
   "apps": [
     {
-        "name": "simba-claim",
+        "name": "simba-worker",
         "script": "./bin/www",
         "port": "8887",
         "env": {

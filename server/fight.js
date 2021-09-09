@@ -10,9 +10,15 @@ const BATTLE_ADDRESS = "0x9aA2F05b70386fFe0A273C757fE02C21da021d62";
 const BATTLE_ABI = require("./battle_abi.json");
 const CONTRACT_BATTLE = new web3.eth.Contract(BATTLE_ABI, BATTLE_ADDRESS);
 
+const POOL_ADDRESS = "0x9aa2f05b70386ffe0a273c757fe02c21da021d62";
+
+var SIM_ABI = require("./abi.json");
+const SIM_ADDRESS = "0x70784d8A360491562342B4F3d3D039AaAcAf8F5D";
+const CONTRACT_SIM = new web3.eth.Contract(SIM_ABI, SIM_ADDRESS);
+
 var CronJob = require('cron').CronJob;
 const TelegramBot = require('node-telegram-bot-api');
-const token = 'bot_token';
+const token = 'token_bot';
 const bot = new TelegramBot(token, {
   polling: true
 });
@@ -199,14 +205,17 @@ module.exports = {
     var job = new CronJob('*/5 * * * * *', async function() {
       var utcMoment = moment.utc();
       var balance = await that.getBalance();
-      var str_balance = "======= <b>Claim SIM NOW</b> ======= \n";
-      str_balance += "Chain: <b>Polygon (Matic)</b> \n";
-      str_balance += `Pool amount: <b>${balance}</b> \n`;
-      str_balance += `Latest update: <b>${utcMoment.format('HH:mm:ss')}</b> (UTC) \n`;
-      str_balance += "================================== \n";
+      var str_balance = "=== <b>Claim SIM NOW</b> === \n";
+      str_balance 	 += "Chain: <b>Polygon (Matic)</b> \n";
+      str_balance 	 += `Pool amount: <b>${balance}</b> \n`;
+      str_balance 	 += `Latest update: <b>${utcMoment.format('HH:mm:ss')}</b> (UTC) \n`;
+      str_balance 	 += "Check winning reward: https://t.me/simbarewardfree \n";
+      str_balance 	 += "Bot source code: https://github.com/Cra5hs/winning_reward_simba \n";
+      str_balance 	 += "Auto claim source code: https://github.com/Cra5hs/bot_claim_simbaempire \n";
+
       if (balance > 1000) {
         bot.sendMessage(-1001588985231, str_balance, {
-          disable_web_page_preview: false,
+          disable_web_page_preview: true,
           disable_notification: false,
           parse_mode: "HTML"
         });
@@ -236,18 +245,21 @@ module.exports = {
       });
 
 
-      var str_reward = "======= <b>Winning Rewards</b> ======= \n";
-      str_reward += "Chain: <b>Polygon (Matic)</b> \n";
-      str_reward += "Auto Refresh: <b>5 seconds</b> \n";
-      str_reward += `Latest update: <b>${utcMoment.format('HH:mm:ss')}</b> (UTC) \n`;
-      str_reward += "================================== \n";
+      var str_reward = "=== <b>Winning Rewards</b> === \n";
+      str_reward 	+= "Chain: <b>Polygon (Matic)</b> \n";
+      str_reward 	+= "Auto Refresh: <b>5 seconds</b> \n";
+      str_reward 	+= `Latest update: <b>${utcMoment.format('HH:mm:ss')}</b> (UTC) \n`;
+      str_reward 	+= "Check pool 4 claim: https://t.me/simbapoolreward \n";
+      str_reward 	+= "Auto claim source code: https://github.com/Cra5hs/bot_claim_simbaempire \n";
+      str_reward 	+= "Bot source code: https://github.com/Cra5hs/winning_reward_simba \n";
+      str_reward 	+= "============== \n";
       arrays.forEach((item, i) => {
-        str_reward += `⚠️ <b>${item.name}</b> - <b>${item.reward}</b> SIM \n`;
+      str_reward    += `⚠️ <b>${item.name}</b> - <b>${item.reward}</b> SIM \n`;
       });
 
       bot.sendMessage(-1001522177782, str_reward, {
-        disable_web_page_preview: false,
-        disable_notification: false,
+        disable_web_page_preview: true,
+        disable_notification: true,
         parse_mode: "HTML"
       });
     }, null, true, 'America/Los_Angeles');
@@ -330,9 +342,8 @@ module.exports = {
     try {
       const result = await CONTRACT_SIM.methods.balanceOf(POOL_ADDRESS).call();
       const format = web3.utils.fromWei(result);
-      console.log(`===== POOL HAS ${format} =====`);
       return format;
-    } catch {}
+    } catch (err){ console.log(err);}
     return 0;
   }
 }
