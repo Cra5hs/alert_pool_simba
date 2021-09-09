@@ -1,5 +1,8 @@
 # winning_reward_simba
 
+Join group & follow me:  https://t.me/joinchat/XZ6auZHurY05N2I1
+
+
 How to start:
 
 1.  Install nodejs
