@@ -1,6 +1,6 @@
 # winning_reward_simba
 
-Join group & follow me: [![Telegram Badge](https://img.shields.io/badge/-[Source code] Bot Simba Empire-0072b1?style=flat&logo=Telegram&logoColor=white&link=https://t.me/joinchat/Lu9JNIDr6sU2MTg1)](https://t.me/joinchat/Lu9JNIDr6sU2MTg1) 
+Join group & follow me: [![Telegram Badge](https://img.shields.io/badge/-[Source-code]-Bot-Simba-Empire-0072b1?style=flat&logo=Telegram&logoColor=white&link=https://t.me/joinchat/Lu9JNIDr6sU2MTg1)](https://t.me/joinchat/Lu9JNIDr6sU2MTg1) 
 
 How to start:
 
