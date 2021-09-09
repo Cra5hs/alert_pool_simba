@@ -1,19 +1,25 @@
 const Web3 = require('web3');
 const provider = "https://rpc-mainnet.matic.quiknode.pro";
+
 const web3 = new Web3(new Web3.providers.HttpProvider(provider));
 
 const SIM_DECIMAL = 18;
 const MONSTER_IN_ONE_MAP = 19;
-const ANIMAL_ADDRESS = "0x43bAB1A12dB095641CC8B13c3B23347FA2b3AAa4";
-const ANIMAL_ABI = require("./animal_abi.json");
-const CONTRACT_ANIMAL = new web3.eth.Contract(ANIMAL_ABI, ANIMAL_ADDRESS);
 
 const BATTLE_ADDRESS = "0x9aA2F05b70386fFe0A273C757fE02C21da021d62";
 const BATTLE_ABI = require("./battle_abi.json");
 const CONTRACT_BATTLE = new web3.eth.Contract(BATTLE_ABI, BATTLE_ADDRESS);
 
-const monsterInfo = [
-  {
+var CronJob = require('cron').CronJob;
+const TelegramBot = require('node-telegram-bot-api');
+const token = 'bot_token';
+const bot = new TelegramBot(token, {
+  polling: true
+});
+
+var moment = require('moment');
+
+const monsterInfo = [{
     name: "Bat",
     coordinates: {
       x: 20,
@@ -190,45 +196,64 @@ module.exports = {
   async run() {
     var that = this;
 
-    var monsters = await this.fetchMonsters();
-    monsters.sort(function(a, b) {
-      return parseInt(a.id) - parseInt(b.id);
-    });
-    console.log(monsters);
-    await that.asyncForEach(monsters, async item => {
-      const prize = await CONTRACT_BATTLE.methods.getPrize({
-        id: item.id,
-        cl: item.cl,
-        map: 1,
-        power: parseInt(item.power * 1000000),
-        active: true
-      }).call();
-      var map = {
-        id: item.id,
-        power: item.power,
-        reward: prize / 1000000,
-        name: monsterInfo[parseInt(item.id)].name
-      };
-      console.log(map);
-    });
-  },
+    var job = new CronJob('*/5 * * * * *', async function() {
+      var utcMoment = moment.utc();
+      var balance = await that.getBalance();
+      var str_balance = "======= <b>Claim SIM NOW</b> ======= \n";
+      str_balance += "Chain: <b>Polygon (Matic)</b> \n";
+      str_balance += `Pool amount: <b>${balance}</b> \n`;
+      str_balance += `Latest update: <b>${utcMoment.format('HH:mm:ss')}</b> (UTC) \n`;
+      str_balance += "================================== \n";
+      if (balance > 1000) {
+        bot.sendMessage(-1001588985231, str_balance, {
+          disable_web_page_preview: false,
+          disable_notification: false,
+          parse_mode: "HTML"
+        });
+      }
 
-  async getAnimals(address) {
-    const total = await CONTRACT_ANIMAL.methods.balanceOf(address).call();
-    const result = await CONTRACT_ANIMAL.methods.getSimbasByAccount(address, total, 0).call();
-    return result;
-  },
+      var monsters = await that.fetchMonsters();
+      monsters.sort(function(a, b) {
+        return parseInt(a.id) - parseInt(b.id);
+      });
+      var arrays = [];
 
-  async getPriceBuy(level) {
-    const data = await CONTRACT_ANIMAL.methods.SIMBA_PRICES(level).call();
-    var result = +this.cryptoConvert('decode', data, SIM_DECIMAL);
-    return result;
-  },
+      await that.asyncForEach(monsters, async item => {
+        const prize = await CONTRACT_BATTLE.methods.getPrize({
+          id: item.id,
+          cl: item.cl,
+          map: 1,
+          power: parseInt(item.power * 1000000),
+          active: true
+        }).call();
+        var map = {
+          id: item.id,
+          power: item.power,
+          reward: prize / 1000000,
+          name: monsterInfo[parseInt(item.id)].name
+        };
+        arrays.push(map);
+      });
 
-  getPower(json, priceBuy) {
-    const totalQualities = +json.ag + +json.hp + +json.it + +json.st + +json.mp;
-    const value = parseFloat(priceBuy + (priceBuy * totalQualities) / 714);
-    return +(value.toFixed(6));
+
+      var str_reward = "======= <b>Winning Rewards</b> ======= \n";
+      str_reward += "Chain: <b>Polygon (Matic)</b> \n";
+      str_reward += "Auto Refresh: <b>5 seconds</b> \n";
+      str_reward += `Latest update: <b>${utcMoment.format('HH:mm:ss')}</b> (UTC) \n`;
+      str_reward += "================================== \n";
+      arrays.forEach((item, i) => {
+        str_reward += `⚠️ <b>${item.name}</b> - <b>${item.reward}</b> SIM \n`;
+      });
+
+      bot.sendMessage(-1001522177782, str_reward, {
+        disable_web_page_preview: false,
+        disable_notification: false,
+        parse_mode: "HTML"
+      });
+    }, null, true, 'America/Los_Angeles');
+    job.start();
+
+
   },
 
   cryptoConvert(type, amount, decimals, ) {
@@ -248,23 +273,6 @@ module.exports = {
     const data = await CONTRACT_BATTLE.methods.getMonsters().call();
     const monsterRaws = this.getMonsterMaps(data);
     return monsterRaws;
-  },
-
-  async getAnimalBattle(id) {
-    const animalBattle = await CONTRACT_BATTLE.methods.getAdventureSimbas([id]).call();
-    return animalBattle[0].fightCount;
-  },
-
-  async getAnimalBattleFightLimitPerDay() {
-    const max = await CONTRACT_BATTLE.methods.simbaFightLimitPerDay().call();
-    return max;
-  },
-
-  winPercent(animalPower, monsterPower) {
-    if (animalPower <= 0 || monsterPower < 0) return 0;
-    let value = ((animalPower / monsterPower) * 100) + animal.battleMonster.exp * 0.1;
-    if (value > 99) return 99;
-    return value;
   },
 
   getMonsterMaps(rawData) {
@@ -316,4 +324,15 @@ module.exports = {
       await callback(array[index], index, array)
     }
   },
+
+
+  async getBalance() {
+    try {
+      const result = await CONTRACT_SIM.methods.balanceOf(POOL_ADDRESS).call();
+      const format = web3.utils.fromWei(result);
+      console.log(`===== POOL HAS ${format} =====`);
+      return format;
+    } catch {}
+    return 0;
+  }
 }
