@@ -1,5 +1,6 @@
 # alert_pool_simba
 
+Channel running it: https://t.me/simbaalertpool
 
 How to start:
 
