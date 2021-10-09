@@ -2,7 +2,7 @@ const Web3 = require('web3');
 var moment = require('moment');
 var CronJob = require('cron').CronJob;
 const TelegramBot = require('node-telegram-bot-api');
-const token = 'bot_token';
+const token = '1951972532:AAHdG7NygaxNSvfCRLCfGhNeCprKIypLt7E';
 const bot = new TelegramBot(token, {
   polling: true
 });
